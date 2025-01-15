@@ -1,12 +1,22 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import time
 
-SOURCE_DATA = ('data.csv')
-REVISION_DATA = ('revision.csv')
-NROWS = 2000
+st.set_page_config(page_title="童程童美关山校区学时查询",
+                   page_icon="🤖",
+                   initial_sidebar_state="auto",
+                   menu_items={
+                       'About': "### 该系统仅用于童程童美关山校区学员剩余学时查询\n"
+                                "1. 请输入学生姓名，点击查询\n"
+                                "2. 如果数据无误，请点击确认无误\n"
+                                "3. 如果数据有误，或者没有您小孩的数据，请填写修改信息并提交修改\n"
+                   })
+
+SOURCE_DATA = ('data/source.csv')
+REVISION_DATA = ('data/revision.csv')
+NROWS = 3000
 
 if 'searched' not in st.session_state:
     st.session_state['searched'] = False
@@ -18,7 +28,12 @@ if 'ret_revision' not in st.session_state:
     st.session_state['ret_revision'] = pd.DataFrame()
 
 def timestamp():
-    return datetime.fromtimestamp(time.time()).strftime("%Y%m%d-%H%M%S")
+    td = timedelta(hours=8)
+    tz = timezone(td)
+    dt = datetime.fromtimestamp(time.time(), tz)
+    dt = dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    return dt
 
 def search(name, data):
     ret = data.query('学员姓名.str.contains("{}", na=False)'.format(name))
@@ -32,10 +47,10 @@ def add(name, hours, card, remarks):
     last_index = 1
     if not revision.empty:
         last_index = revision.index[-1] + 1
-    name = name.replace(',', '，').replace('.', '。')
-    hours = hours.replace(',', '，').replace('.', '。')
-    card = card.replace(',', '，').replace('.', '。')
-    remarks = remarks.replace(',', '，').replace('.', '。')
+    name = name.replace(',', '，')
+    hours = hours.replace(',', '，')
+    card = card.replace(',', '，')
+    remarks = remarks.replace(',', '，')
     revision.loc[last_index] = [name, hours, card, remarks, timestamp()]
     revision.to_csv(REVISION_DATA, encoding='utf-8', index=False)
 
@@ -53,7 +68,7 @@ name = st.text_input(
             '学生姓名',
             value = '',
             placeholder = '请输入学生姓名',
-            max_chars = 10,
+            max_chars = 30,
             label_visibility = 'hidden'
         )
 
@@ -88,9 +103,9 @@ if st.session_state['searched']:
 
     with st.form(f"revision_request_form"):
         _name = st.text_input("学生姓名", value=name, disabled = True)
-        _hours = st.text_input("剩余学时", value='', max_chars = 10)
-        _card = st.text_input("童享卡权益金", value='', max_chars = 10)
-        _remarks = st.text_input("情况备注", value='', max_chars = 50)
+        _hours = st.text_input("剩余学时", value='', max_chars = 30)
+        _card = st.text_input("童享卡权益金", value='', max_chars = 30)
+        _remarks = st.text_area("情况备注", value='', placeholder = '其他情况都在该栏填写。例如畅学卡，xx年xx月xx日购买课时包……', max_chars = 200)
         submitted = st.form_submit_button("提交")
         if submitted:
             if len(name) > 0:

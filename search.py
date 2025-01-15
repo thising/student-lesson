@@ -72,6 +72,11 @@ if st.session_state['searched']:
             st.warning(f'暂时没有找到{name}的原始记录')
         else:
             st.write(current_source)
+            if st.button('确认无误', type = 'primary'):
+                if len(name) > 0:
+                    add(name, '', '', '确认无误')
+                    research()
+                    st.rerun()
 
     with st.container(border = True):
         st.caption(f'修改请求')

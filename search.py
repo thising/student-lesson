@@ -102,7 +102,7 @@ if st.session_state['searched']:
             st.write(current_source)
             if st.button('确认无误', type = 'primary'):
                 if len(name) > 0:
-                    add(name, '不变', '不变', '确认无误')
+                    add(name, '已确认', '已确认', '', '确认无误')
                     research()
                     st.rerun()
 
